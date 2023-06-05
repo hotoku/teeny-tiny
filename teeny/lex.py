@@ -61,6 +61,8 @@ class Lexer:
         この関数自体は、値を返さず、メンバー変数curChar(=現在着目している文字)に副作用を起こすだけ。
         現在の文字がほしい場合は、self.curCharにアクセスする。
         現在の文字への参照は複数回、色んな場所からあるかもしれない想定。
+
+        この関数が呼ばれる = 呼ばれる前のcurPos, curCharが消費され、次の文字に着目する状態になる。
         """
         self.curPos += 1
         if self.curPos >= len(self.source):
@@ -174,5 +176,8 @@ class Lexer:
         else:
             self.abort(f"Unknown token: {self.curChar}@{self.curPos}")
             assert False
+
+        # ここの時点で、内部状態は、現在のトークンの最後の文字に着目している状態。
+        # リターンの直前で、ここまでの結果を消費し、次の読み込みに備える。
         self.nextChar()
         return token

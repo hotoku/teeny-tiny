@@ -1,5 +1,5 @@
 import sys
-from lex import *
+from .lex import *
 
 
 class Parser:
@@ -50,8 +50,58 @@ class Parser:
                 self.nextToken()
             else:
                 self.expression()
+        elif self.checkToken(TokenType.IF):
+            print("STATEMENT-IF")
+            self.nextToken()
+            self.comparison()
+
+            self.match(TokenType.THEN)
+            self.nl()
+
+            while not self.checkToken(TokenType.ENDIF):
+                self.statement()
+            self.match(TokenType.ENDIF)
+        elif self.checkToken(TokenType.WHILE):
+            print("STATEMENT-WHILE")
+            self.nextToken()
+            self.comparison()
+
+            self.match(TokenType.REPEAT)
+            self.nl()
+
+            while not self.checkToken(TokenType.ENDWHILE):
+                self.statement()
+
+            self.match(TokenType.ENDWHILE)
+        elif self.checkToken(TokenType.LABEL):
+            print("STATEMENT-LABEL")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+        elif self.checkToken(TokenType.GOTO):
+            print("STATEMENT-GOTO")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+        elif self.checkToken(TokenType.LET):
+            print("STATEMENT-LET")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+            self.match(TokenType.EQ)
+            self.expression()
+        elif self.checkToken(TokenType.INPUT):
+            print("STATEMENT-INPUT")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+        else:
+            self.abort(
+                f"Invalid statement at {self.curToken.text} ({self.curToken.kind.name})")
 
         self.nl()
+
+    def expression(self) -> None:
+        raise NotImplementedError("expression")
+
+    def comparison(self) -> None:
+        raise NotImplementedError("comparison")
 
     def nl(self) -> None:
         print("NEWLINE")

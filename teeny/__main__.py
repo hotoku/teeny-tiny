@@ -1,7 +1,7 @@
 import sys
 
-from lex import *
-from parser import *
+from .lex import *
+from .parse import *
 
 
 def main():

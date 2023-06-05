@@ -1,3 +1,3 @@
 .PHONY: all
 all:
-	@python teenytiny.py hello.teeny
+	@python -m teeny hello.teeny
