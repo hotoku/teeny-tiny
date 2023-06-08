@@ -101,10 +101,56 @@ class Parser:
         self.nl()
 
     def expression(self) -> None:
-        raise NotImplementedError("expression")
+        print("EXPRESSION")
+        self.term()
+        while self.curToken.kind in (TokenType.MINUS, TokenType.PLUS):
+            self.nextToken()
+            self.term()
+
+    def term(self) -> None:
+        print("TERM")
+        self.unary()
+        while self.curToken.kind in (TokenType.SLASH, TokenType.ASTERISK):
+            self.nextToken()
+            self.unary()
+
+    def unary(self) -> None:
+        print("UNARY")
+        if self.curToken.kind in (TokenType.PLUS, TokenType.MINUS):
+            self.nextToken()
+        self.primary()
+
+    def primary(self) -> None:
+        print(f"PRIMARY ({self.curToken.text})")
+        if self.checkToken(TokenType.NUMBER) or self.checkToken(TokenType.IDENT):
+            self.nextToken()
+        else:
+            self.abort(f"Expected primary at: {self.curToken.text}")
 
     def comparison(self) -> None:
-        raise NotImplementedError("comparison")
+        print("COMPARISON")
+
+        self.expression()
+        if self.isComparisonOperator():
+            self.nextToken()
+            self.expression()
+        else:
+            self.abort(
+                f"Expected comparison operator at: {self.curToken.text}")
+
+        while self.isComparisonOperator():
+            self.nextToken()
+            self.expression()
+
+    def isComparisonOperator(self) -> bool:
+        return self.curToken.kind in (
+            TokenType.EQEQ,
+            TokenType.NOTEQ,
+            TokenType.GT,
+            TokenType.GTEQ,
+            TokenType.LT,
+            TokenType.LTEQ
+        )
 
     def nl(self) -> None:
         print("NEWLINE")
