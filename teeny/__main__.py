@@ -2,6 +2,7 @@ import sys
 
 from .lex import *
 from .parse import *
+from .emit import *
 
 
 def main():
@@ -13,8 +14,11 @@ def main():
         source = fp.read()
 
     lexer = Lexer(source)
-    parser = Parser(lexer)
+    emitter = Emitter("out.c")
+    parser = Parser(lexer, emitter)
+
     parser.program()
+    emitter.writeFile()
     print("parsing completed.")
 
 
