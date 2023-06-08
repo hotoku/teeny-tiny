@@ -145,27 +145,27 @@ scanf("%*s");
         self.nl()
 
     def expression(self) -> None:
-        print("EXPRESSION")
         self.term()
         while self.curToken.kind in (TokenType.MINUS, TokenType.PLUS):
+            self.emitter.emit(self.curToken.text)
             self.nextToken()
             self.term()
 
     def term(self) -> None:
-        print("TERM")
         self.unary()
         while self.curToken.kind in (TokenType.SLASH, TokenType.ASTERISK):
+            self.emitter.emit(self.curToken.text)
             self.nextToken()
             self.unary()
 
     def unary(self) -> None:
-        print("UNARY")
         if self.curToken.kind in (TokenType.PLUS, TokenType.MINUS):
+            self.emitter.emit(self.curToken.text)
             self.nextToken()
         self.primary()
 
     def primary(self) -> None:
-        print(f"PRIMARY ({self.curToken.text})")
+        self.emitter.emit(self.curToken.text)
         if self.checkToken(TokenType.NUMBER):
             self.nextToken()
         elif self.checkToken(TokenType.IDENT):
@@ -176,10 +176,9 @@ scanf("%*s");
             self.abort(f"Expected primary at: {self.curToken.text}")
 
     def comparison(self) -> None:
-        print("COMPARISON")
-
         self.expression()
         if self.isComparisonOperator():
+            self.emitter.emit(self.curToken.text)
             self.nextToken()
             self.expression()
         else:
@@ -187,6 +186,7 @@ scanf("%*s");
                 f"Expected comparison operator at: {self.curToken.text}")
 
         while self.isComparisonOperator():
+            self.emitter.emit(self.curToken.text)
             self.nextToken()
             self.expression()
 
@@ -201,7 +201,6 @@ scanf("%*s");
         )
 
     def nl(self) -> None:
-        print("NEWLINE")
         self.match(TokenType.NEWLINE)
         while self.checkToken(TokenType.NEWLINE):
             self.nextToken()
