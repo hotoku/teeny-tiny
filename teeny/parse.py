@@ -92,42 +92,51 @@ int main(void){
 
             self.match(TokenType.REPEAT)
             self.nl()
-            self.emitter.emit("){")
+            self.emitter.emitLine("){")
 
             while not self.checkToken(TokenType.ENDWHILE):
                 self.statement()
 
             self.match(TokenType.ENDWHILE)
-            self.emitter.emit("}")
+            self.emitter.emitLine("}")
         elif self.checkToken(TokenType.LABEL):
-            print("STATEMENT-LABEL")
             self.nextToken()
 
             if self.curToken.text in self.labelsDeclared:
                 self.abort(f"Lable already exists: {self.curToken.text}")
             self.labelsDeclared.add(self.curToken.text)
 
+            self.emitter.emitLine(self.curToken.text + ":")
             self.match(TokenType.IDENT)
         elif self.checkToken(TokenType.GOTO):
-            print("STATEMENT-GOTO")
             self.nextToken()
             self.labelsGotoed.add(self.curToken.text)
+            self.emitter.emitLine(f"goto {self.curToken.text};")
             self.match(TokenType.IDENT)
         elif self.checkToken(TokenType.LET):
-            print("STATEMENT-LET")
             self.nextToken()
 
-            self.symbols.add(self.curToken.text)
+            if self.curToken.text not in self.symbols:
+                self.symbols.add(self.curToken.text)
+                self.emitter.headerLIne(f"float {self.curToken.text};")
 
+            self.emitter.emit(f"{self.curToken.text} = ")
             self.match(TokenType.IDENT)
             self.match(TokenType.EQ)
             self.expression()
+            self.emitter.emitLine(";")
         elif self.checkToken(TokenType.INPUT):
-            print("STATEMENT-INPUT")
             self.nextToken()
 
-            self.symbols.add(self.curToken.text)
+            if self.curToken.text not in self.symbols:
+                self.symbols.add(self.curToken.text)
+                self.emitter.headerLIne(f"float {self.curToken.text};")
 
+            self.emitter.emitLine(f"""
+if(0 == scanf("%f", &{self.curToken.text}))""" + "{" + f"""
+{self.curToken.text} = 0;
+scanf("%*s");
+""" + "}")
             self.match(TokenType.IDENT)
         else:
             self.abort(
