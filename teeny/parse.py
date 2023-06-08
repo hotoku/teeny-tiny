@@ -1,10 +1,12 @@
 import sys
 from .lex import *
+from .emit import *
 
 
 class Parser:
-    def __init__(self, lexer: Lexer) -> None:
+    def __init__(self, lexer: Lexer, emitter: Emitter) -> None:
         self.lexer = lexer
+        self.emitter = emitter
 
         self.symbols = set()
         self.labelsDeclared = set()
@@ -41,12 +43,19 @@ class Parser:
         sys.exit("Error. " + message)
 
     def program(self) -> None:
-        print("PROGRAM")
+        self.emitter.headerLIne("""#include <stdio.h>
+
+int main(void){
+""")
+
         while self.checkToken(TokenType.NEWLINE):
             self.nextToken()
 
         while not self.checkToken(TokenType.EOF):
             self.statement()
+
+        self.emitter.emitLine("""return 0;
+}""")
 
         labelsNotDeclared = self.labelsGotoed - self.labelsDeclared
         if len(labelsNotDeclared) > 0:
@@ -54,36 +63,42 @@ class Parser:
 
     def statement(self) -> None:
         if self.checkToken(TokenType.PRINT):
-            print("STATEMENT-PRINT")
             self.nextToken()
 
             if self.checkToken(TokenType.STRING):
+                self.emitter.emitLine(f'printf("{self.curToken.text}\\n");')
                 self.nextToken()
             else:
+                self.emitter.emit('printf("%.2f\\n", (float)(')
                 self.expression()
+                self.emitter.emitLine("));")
         elif self.checkToken(TokenType.IF):
-            print("STATEMENT-IF")
             self.nextToken()
+            self.emitter.emit("if(")
             self.comparison()
 
             self.match(TokenType.THEN)
             self.nl()
+            self.emitter.emitLine("){")
 
             while not self.checkToken(TokenType.ENDIF):
                 self.statement()
             self.match(TokenType.ENDIF)
+            self.emitter.emitLine("}")
         elif self.checkToken(TokenType.WHILE):
-            print("STATEMENT-WHILE")
             self.nextToken()
+            self.emitter.emit("while(")
             self.comparison()
 
             self.match(TokenType.REPEAT)
             self.nl()
+            self.emitter.emit("){")
 
             while not self.checkToken(TokenType.ENDWHILE):
                 self.statement()
 
             self.match(TokenType.ENDWHILE)
+            self.emitter.emit("}")
         elif self.checkToken(TokenType.LABEL):
             print("STATEMENT-LABEL")
             self.nextToken()
