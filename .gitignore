@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /index.html
 out.c
+a.out
