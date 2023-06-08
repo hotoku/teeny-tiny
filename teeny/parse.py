@@ -6,6 +6,10 @@ class Parser:
     def __init__(self, lexer: Lexer) -> None:
         self.lexer = lexer
 
+        self.symbols = set()
+        self.labelsDeclared = set()
+        self.labelsGotoed = set()
+
         self.curToken: Token = None  # type: ignore
         self.peekToken: Token = None  # type: ignore
         self.nextToken()
@@ -44,6 +48,10 @@ class Parser:
         while not self.checkToken(TokenType.EOF):
             self.statement()
 
+        labelsNotDeclared = self.labelsGotoed - self.labelsDeclared
+        if len(labelsNotDeclared) > 0:
+            self.abort(f"not declared labels: {labelsNotDeclared}")
+
     def statement(self) -> None:
         if self.checkToken(TokenType.PRINT):
             print("STATEMENT-PRINT")
@@ -79,20 +87,32 @@ class Parser:
         elif self.checkToken(TokenType.LABEL):
             print("STATEMENT-LABEL")
             self.nextToken()
+
+            if self.curToken.text in self.labelsDeclared:
+                self.abort(f"Lable already exists: {self.curToken.text}")
+            self.labelsDeclared.add(self.curToken.text)
+
             self.match(TokenType.IDENT)
         elif self.checkToken(TokenType.GOTO):
             print("STATEMENT-GOTO")
             self.nextToken()
+            self.labelsGotoed.add(self.curToken.text)
             self.match(TokenType.IDENT)
         elif self.checkToken(TokenType.LET):
             print("STATEMENT-LET")
             self.nextToken()
+
+            self.symbols.add(self.curToken.text)
+
             self.match(TokenType.IDENT)
             self.match(TokenType.EQ)
             self.expression()
         elif self.checkToken(TokenType.INPUT):
             print("STATEMENT-INPUT")
             self.nextToken()
+
+            self.symbols.add(self.curToken.text)
+
             self.match(TokenType.IDENT)
         else:
             self.abort(
@@ -122,7 +142,11 @@ class Parser:
 
     def primary(self) -> None:
         print(f"PRIMARY ({self.curToken.text})")
-        if self.checkToken(TokenType.NUMBER) or self.checkToken(TokenType.IDENT):
+        if self.checkToken(TokenType.NUMBER):
+            self.nextToken()
+        elif self.checkToken(TokenType.IDENT):
+            if self.curToken.text not in self.symbols:
+                self.abort(f"not defined symbol: {self.curToken.text}")
             self.nextToken()
         else:
             self.abort(f"Expected primary at: {self.curToken.text}")
